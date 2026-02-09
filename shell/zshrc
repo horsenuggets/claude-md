@@ -431,7 +431,26 @@ cldw() {
         return 1
     fi
 
-    local repo_name=$(basename "$git_root")
+    # Detect the real repo name (handles being inside a worktree)
+    local repo_name
+    local git_common_dir
+    git_common_dir=$(git rev-parse --git-common-dir 2>/dev/null)
+    if [[ "$git_common_dir" == *"/git/"*"/.git" ]]; then
+        # We're in the main repo or a worktree - extract repo name from common dir
+        repo_name=$(basename "$(dirname "$git_common_dir")")
+    elif [[ "$git_common_dir" == ".git" ]]; then
+        # We're in the main working tree
+        repo_name=$(basename "$git_root")
+    else
+        repo_name=$(basename "$git_root")
+    fi
+    # Always create worktrees from the main repo at ~/git/<repo>
+    local main_repo="$HOME/git/$repo_name"
+    if [[ ! -d "$main_repo/.git" ]]; then
+        # Fallback to current git root if main repo not found
+        main_repo="$git_root"
+    fi
+
     local worktree_name=$(_get_worktree_name "$repo_name")
     local branch_name="feature/$worktree_name"
     local worktree_path="$HOME/.claude/worktrees/$repo_name/$worktree_name"
@@ -439,9 +458,9 @@ cldw() {
     # Create parent directory
     mkdir -p "$HOME/.claude/worktrees/$repo_name"
 
-    # Create the worktree with a new branch from current HEAD
+    # Create the worktree with a new branch from main repo's HEAD
     echo "Creating worktree \"$worktree_name\" for $repo_name..."
-    git worktree add "$worktree_path" -b "$branch_name" 2>/dev/null
+    git -C "$main_repo" worktree add "$worktree_path" -b "$branch_name" 2>/dev/null
     if [[ $? -ne 0 ]]; then
         echo "Error: failed to create worktree"
         return 1

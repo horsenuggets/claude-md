@@ -155,6 +155,9 @@ sends their first message, rename both the branch and folder to a descriptive ke
 matching the task (e.g., `tool-feedback-display`). Do not use slashes in the name since it
 must work as both a folder name and branch name.
 
+To rename, do this **before starting work** (not while a session is active in the directory,
+since moving the working directory under an active session causes path issues):
+
 ```bash
 git branch -m <new-name>
 git worktree move <old-path> ~/.claude/worktrees/<repo>/<new-name>
