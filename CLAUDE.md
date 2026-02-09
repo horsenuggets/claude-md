@@ -150,7 +150,9 @@ Work in worktrees to isolate parallel tasks. This replaces Conductor.
 
 **Structure:** `~/.claude/worktrees/<repo-name>/<worktree-name>/`
 
-Each worktree gets a random city name and a `feature/<city-name>` branch.
+Each worktree gets a random city name and a `feature/<city-name>` branch. After the user
+sends their first message, rename the branch to something relevant to the task in kebab-case
+(e.g., `worktree/fixing-the-bug`). Use `git branch -m <new-name>` to rename.
 
 **Shell commands:**
 - `cldw [message]` - Create a worktree for the current repo and launch Claude Code in it
