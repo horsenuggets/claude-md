@@ -1,0 +1,616 @@
+# Claude Workflow Shell Configuration
+# Source this file from your ~/.zshrc or ~/.bashrc
+# Works on macOS, Linux, and WSL
+
+# ============================================================================
+# Platform Detection
+# ============================================================================
+
+_detect_platform() {
+    case "$(uname -s)" in
+        Darwin*) echo "macos" ;;
+        Linux*)
+            if grep -qi microsoft /proc/version 2>/dev/null; then
+                echo "wsl"
+            else
+                echo "linux"
+            fi
+            ;;
+        MINGW*|MSYS*|CYGWIN*) echo "gitbash" ;;
+        *) echo "unknown" ;;
+    esac
+}
+
+CLAUDE_PLATFORM=$(_detect_platform)
+
+# ============================================================================
+# Cross-Platform Clipboard
+# ============================================================================
+
+_clipboard_copy() {
+    case "$CLAUDE_PLATFORM" in
+        macos) pbcopy ;;
+        linux) xclip -selection clipboard 2>/dev/null || xsel --clipboard --input 2>/dev/null ;;
+        wsl) clip.exe ;;
+        gitbash) clip ;;
+        *) cat > /dev/null ;;  # Fallback: discard
+    esac
+}
+
+_clipboard_paste() {
+    case "$CLAUDE_PLATFORM" in
+        macos) pbpaste ;;
+        linux) xclip -selection clipboard -o 2>/dev/null || xsel --clipboard --output 2>/dev/null ;;
+        wsl) powershell.exe -command "Get-Clipboard" | tr -d '\r' ;;
+        gitbash) powershell.exe -command "Get-Clipboard" | tr -d '\r' ;;
+        *) echo "" ;;
+    esac
+}
+
+# ============================================================================
+# Environment Setup
+# ============================================================================
+
+# macOS Homebrew
+if [[ "$CLAUDE_PLATFORM" == "macos" && ":$PATH:" != *":/opt/homebrew/bin:"* ]]; then
+    export PATH="/opt/homebrew/bin:$PATH"
+fi
+
+# Load environment variables from .env file
+if [[ -f ~/.env ]]; then
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        # Skip empty lines and comments
+        line="${line%%#*}"
+        line="${line#"${line%%[![:space:]]*}"}"
+        line="${line%"${line##*[![:space:]]}"}"
+        [[ -z "$line" ]] && continue
+
+        # Extract key and value (key is everything before first =)
+        key="${line%%=*}"
+        value="${line#*=}"
+        # Skip if no = found or key is invalid
+        [[ "$key" == "$line" ]] && continue
+        [[ ! "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] && continue
+        # Remove surrounding quotes if present
+        value="${value#\"}"
+        value="${value%\"}"
+        value="${value#\'}"
+        value="${value%\'}"
+        export "$key"="$value"
+    done < ~/.env
+fi
+
+# ============================================================================
+# Git Utilities
+# ============================================================================
+
+# Check if a repo has changes ready to ship
+shipcheck() {
+    # Verify we're in a git repo
+    if ! git rev-parse --git-dir > /dev/null 2>&1; then
+        echo "Not a git repository"
+        return 1
+    fi
+
+    local has_issues=0
+
+    # Check for uncommitted changes
+    if ! git diff --quiet 2>/dev/null || ! git diff --cached --quiet 2>/dev/null; then
+        echo "⚠ Uncommitted changes"
+        has_issues=1
+    fi
+
+    # Check for untracked files
+    if [[ -n $(git ls-files --others --exclude-standard 2>/dev/null) ]]; then
+        echo "⚠ Untracked files"
+        has_issues=1
+    fi
+
+    # Check for unpushed commits
+    local unpushed=$(git log @{u}..HEAD --oneline 2>/dev/null)
+    if [[ -n "$unpushed" ]]; then
+        echo "⚠ Unpushed commits:"
+        echo "$unpushed" | sed 's/^/  /'
+        has_issues=1
+    fi
+
+    # Check commits on main not in release (if release branch exists)
+    if git show-ref --verify --quiet refs/remotes/origin/release 2>/dev/null; then
+        local unreleased=$(git log origin/release..origin/main --oneline 2>/dev/null)
+        if [[ -n "$unreleased" ]]; then
+            echo "📦 Commits on main not in release:"
+            echo "$unreleased" | sed 's/^/  /'
+            has_issues=1
+        fi
+    fi
+
+    # Check commits since latest tag
+    local latest_tag=$(git describe --tags --abbrev=0 2>/dev/null)
+    if [[ -n "$latest_tag" ]]; then
+        local since_tag=$(git log "$latest_tag"..HEAD --oneline 2>/dev/null)
+        if [[ -n "$since_tag" ]]; then
+            echo "🏷 Commits since $latest_tag:"
+            echo "$since_tag" | sed 's/^/  /'
+            has_issues=1
+        fi
+    fi
+
+    if [[ $has_issues -eq 0 ]]; then
+        echo "✓ Nothing to ship"
+    fi
+}
+
+# gh pr create wrapper that targets the origin remote repo (fork) instead of upstream
+# This ensures PRs are created on your fork where you have collaborator access
+ghprc() {
+    # Get the origin remote's repo (format: owner/repo)
+    local origin_repo=$(git remote get-url origin 2>/dev/null | sed -E 's#(git@github.com:|https://github.com/)##' | sed 's/.git$//')
+
+    if [[ -z "$origin_repo" ]]; then
+        echo "Error: Could not determine origin remote repository"
+        return 1
+    fi
+
+    # Run gh pr create with --repo set to origin and --assignee @me
+    gh pr create --repo "$origin_repo" --assignee @me "$@"
+}
+
+# Generate a random password
+# Usage: genpass [length] (default 20)
+genpass() {
+    local length=${1:-20}
+    local password=$(LC_ALL=C tr -dc 'A-Za-z0-9!@#$%^&*()_+-=' < /dev/urandom | head -c "$length")
+    echo "$password"
+    echo "$password" | _clipboard_copy
+    echo "(Copied to clipboard)"
+}
+
+# List all git projects in ~/git sorted by most recent commit
+# List all projects in ~/git sorted by recent activity
+# For git repos: uses last commit timestamp
+# For non-git directories: uses most recently modified file (if include_non_git=true)
+# Output brightness fades based on age (recent = bright, old = dim)
+# Usage: gitprojects
+gitprojects() {
+    local git_dir="$HOME/git"
+    local include_non_git=true
+    local excluded_dirs=("worktrees" "sandbox")
+
+    if [[ ! -d "$git_dir" ]]; then
+        echo "Directory not found: $git_dir"
+        return 1
+    fi
+
+    # Collect projects with their timestamps
+    local projects=()
+    for dir in "$git_dir"/*/; do
+        [[ -d "$dir" ]] || continue
+        local name=$(basename "$dir")
+
+        # Skip excluded directories
+        if [[ " ${excluded_dirs[*]} " =~ " ${name} " ]]; then
+            continue
+        fi
+        local timestamp=""
+        local date=""
+        local source=""
+
+        if [[ -d "$dir/.git" ]]; then
+            # Git repository: use last commit timestamp
+            timestamp=$(git -C "$dir" log -1 --format=%ct 2>/dev/null)
+            if [[ -n "$timestamp" && "$timestamp" != "0" ]]; then
+                date=$(git -C "$dir" log -1 --format=%ci 2>/dev/null)
+                source="git"
+            else
+                # Git repo with no commits, fall back to file modification
+                source="file"
+            fi
+        elif [[ "$include_non_git" == true ]]; then
+            # Not a git repo, use file modification time
+            source="file"
+        else
+            # Skip non-git directories
+            continue
+        fi
+
+        if [[ "$source" == "file" ]]; then
+            # Find most recently modified file recursively
+            local newest_file=""
+            if command -v fd &>/dev/null; then
+                newest_file=$(fd --type f --hidden --exclude .git . "$dir" 2>/dev/null | head -100 | xargs stat -f '%m %N' 2>/dev/null | sort -rn | head -1)
+            else
+                newest_file=$(find "$dir" -type f ! -path '*/.git/*' 2>/dev/null | head -100 | xargs stat -f '%m %N' 2>/dev/null | sort -rn | head -1)
+            fi
+
+            if [[ -n "$newest_file" ]]; then
+                timestamp=${newest_file%% *}
+                # Convert epoch to date format
+                if [[ "$(uname)" == "Darwin" ]]; then
+                    date=$(date -r "$timestamp" '+%Y-%m-%d %H:%M:%S' 2>/dev/null)
+                else
+                    date=$(date -d "@$timestamp" '+%Y-%m-%d %H:%M:%S' 2>/dev/null)
+                fi
+            fi
+        fi
+
+        # Default if no timestamp found
+        if [[ -z "$timestamp" ]]; then
+            timestamp="0"
+            date="no activity"
+        fi
+
+        projects+=("$timestamp|$name|$date|$source")
+    done
+
+    # Sort and store in array for two-pass processing
+    local sorted_projects=()
+    while IFS= read -r line; do
+        sorted_projects+=("$line")
+    done < <(printf "%s\n" "${projects[@]}" | sort -t'|' -k1 -rn)
+
+    # Find min/max timestamps for normalization (excluding 0)
+    local max_ts=0
+    local min_ts=999999999999
+    for entry in "${sorted_projects[@]}"; do
+        local ts=${entry%%|*}
+        if [[ "$ts" -gt 0 ]]; then
+            [[ "$ts" -gt "$max_ts" ]] && max_ts=$ts
+            [[ "$ts" -lt "$min_ts" ]] && min_ts=$ts
+        fi
+    done
+
+    local reset=$'\033[0m'
+    local total=${#sorted_projects[@]}
+    local position=0
+
+    for entry in "${sorted_projects[@]}"; do
+        IFS='|' read -r ts name date source <<< "$entry"
+
+        # Truncate long names
+        if [[ ${#name} -gt 27 ]]; then
+            name="${name:0:27}..."
+        fi
+
+        # Everything based on normalized position
+        local pos_ratio=$(awk -v pos="$position" -v total="$total" 'BEGIN {
+            if (total <= 1) print 0
+            else printf "%.4f", pos / (total - 1)
+        }')
+
+        # Fire gradient: white -> yellow -> orange -> red -> dim gray
+        local rgb=$(awk -v t="$pos_ratio" 'BEGIN {
+            if (t < 0.1) {
+                p = t / 0.1
+                r = 255; g = 255; b = int(255 * (1 - p))
+            } else if (t < 0.25) {
+                p = (t - 0.1) / 0.15
+                r = 255; g = int(255 - 80 * p); b = 0
+            } else if (t < 0.4) {
+                p = (t - 0.25) / 0.15
+                r = 255; g = int(175 - 75 * p); b = 0
+            } else if (t < 0.55) {
+                p = (t - 0.4) / 0.15
+                r = 255; g = int(100 - 100 * p); b = 0
+            } else if (t < 0.7) {
+                # red -> dark red
+                p = (t - 0.55) / 0.15
+                r = int(255 - 105 * p); g = 0; b = 0
+            } else {
+                # dark red -> dim gray (desaturate and fade)
+                p = (t - 0.7) / 0.3
+                r = int(150 - 80 * p); g = int(70 * p); b = int(70 * p)
+            }
+            printf "%d;%d;%d", r, g, b
+        }')
+
+        # Bold for top 10%
+        local bold=""
+        if awk -v p="$pos_ratio" 'BEGIN { exit !(p < 0.1) }'; then
+            bold="1;"
+        fi
+
+        local color=$'\033['"${bold}38;2;${rgb}m"
+        ((position++))
+
+        if [[ "$date" == "no activity" ]]; then
+            printf "${color}%-30s %s${reset}\n" "$name" "(no activity)"
+        elif [[ "$source" == "file" ]]; then
+            local formatted=$(echo "$date" | cut -d' ' -f1,2)
+            printf "${color}%-30s %s (files)${reset}\n" "$name" "$formatted"
+        else
+            local formatted=$(echo "$date" | cut -d' ' -f1,2)
+            printf "${color}%-30s %s${reset}\n" "$name" "$formatted"
+        fi
+    done
+}
+
+# Create a release branch from main that merges release, always keeping main's content
+# This resolves any conflicts by overwriting release content with main's version
+# Usage: mkrelease <version> (e.g., mkrelease 0.1.2)
+mkrelease() {
+    local version="$1"
+    if [[ -z "$version" ]]; then
+        echo "Usage: mkrelease <version>"
+        echo "Example: mkrelease 0.1.2"
+        return 1
+    fi
+
+    # Ensure we're on main and up to date
+    git checkout main && git pull || return 1
+
+    # Create release branch from main
+    local branch="release-${version}"
+    git checkout -b "$branch" || return 1
+
+    # Fetch release branch and merge it, keeping all of main's content
+    git fetch origin release
+    git merge origin/release --no-edit -X ours || return 1
+
+    # Check if merge brought in any unwanted changes
+    local diff=$(git diff origin/main --stat)
+    if [[ -n "$diff" ]]; then
+        echo "Merge brought in changes from release, resetting to main's versions..."
+        # Get list of files that differ and reset them to main
+        git diff origin/main --name-only | while read file; do
+            git checkout origin/main -- "$file" 2>/dev/null || true
+        done
+        git add -A
+        git commit --amend --no-edit
+    fi
+
+    # Verify branch matches main exactly
+    diff=$(git diff origin/main --stat)
+    if [[ -n "$diff" ]]; then
+        echo "Error: Branch still differs from main:"
+        echo "$diff"
+        return 1
+    fi
+
+    echo "✓ Created branch '$branch' matching main exactly"
+    echo "Push with: git push -u origin $branch"
+    echo "Then create PR: gh pr create --base release --title 'Release $version'"
+}
+
+# ============================================================================
+# Worktree Workflow
+# ============================================================================
+
+# List of quirky city names for worktree naming (same style as Conductor)
+_WORKTREE_NAMES=(
+    amsterdam athens austin bangkok barcelona beirut belgrade bogota bombay
+    bordeaux brisbane bucharest budapest cairo calgary capetown caracas
+    casablanca changhua chiayi chicago cologne copenhagen dakar dallas
+    denver detroit dhaka dubai dublin edinburgh florence fukuoka gdansk
+    geneva glasgow gothenburg guadalajara hamburg hanoi havana helsinki
+    hiroshima houston hsinchu hualien hyderabad istanbul jakarta jerusalem
+    johannesburg kaohsiung karachi kathmandu keelung kigali kingston
+    krakow kuala-lumpur kyoto lagos lahore lima lisbon liverpool london
+    lyon madrid magong malmo manila marrakech marseille medellin melbourne
+    mexico-city miaoli miami milan minneapolis montevideo montreal moscow
+    mumbai munich nagoya nairobi nantes nantou naples nashville nice
+    nicosia osaka oslo ottawa oxford palermo panama paris penghu perth
+    phoenix pingtung portland prague quito reykjavik riga rome rotterdam
+    salzburg santiago sapporo sarajevo seattle seoul sevilla shanghai
+    singapore sofia stockholm strasbourg sydney taichung tainan taipei
+    taitung tallinn taoyuan tbilisi tehran tokyo toronto toulouse tunis
+    valencia vancouver venice vienna vilnius warsaw wellington winnipeg
+    yilan yokohama yunlin zagreb zurich
+)
+
+# Get a random worktree name not already in use for a given repo
+_get_worktree_name() {
+    local repo_dir="$HOME/git/worktrees/$1"
+    local attempts=0
+    local max_attempts=50
+
+    while [[ $attempts -lt $max_attempts ]]; do
+        local idx=$((RANDOM % ${#_WORKTREE_NAMES[@]}))
+        local name="${_WORKTREE_NAMES[$idx]}"
+
+        # Check if this name is already in use
+        if [[ ! -d "$repo_dir/$name" ]]; then
+            echo "$name"
+            return 0
+        fi
+        ((attempts++))
+    done
+
+    # Fallback: use timestamp
+    echo "worktree-$(date +%s)"
+}
+
+# Start Claude Code in a new worktree
+# Usage: cldw [initial-message]
+# Must be run from within a git repository
+cldw() {
+    # Check if we're in a git repo
+    local git_root
+    git_root=$(git rev-parse --show-toplevel 2>/dev/null)
+    if [[ -z "$git_root" ]]; then
+        echo "Error: not in a git repository"
+        return 1
+    fi
+
+    local repo_name=$(basename "$git_root")
+    local worktree_name=$(_get_worktree_name "$repo_name")
+    local branch_name="feature/$worktree_name"
+    local worktree_path="$HOME/git/worktrees/$repo_name/$worktree_name"
+
+    # Create parent directory
+    mkdir -p "$HOME/git/worktrees/$repo_name"
+
+    # Create the worktree with a new branch from current HEAD
+    echo "Creating worktree \"$worktree_name\" for $repo_name..."
+    git worktree add "$worktree_path" -b "$branch_name" 2>/dev/null
+    if [[ $? -ne 0 ]]; then
+        echo "Error: failed to create worktree"
+        return 1
+    fi
+
+    echo "Worktree created at $worktree_path"
+    echo "Branch: $branch_name"
+    echo "Starting Claude Code..."
+
+    # Launch Claude Code in the worktree
+    if [[ -n "$1" ]]; then
+        (cd "$worktree_path" && claude --dangerously-skip-permissions -p "$*")
+    else
+        (cd "$worktree_path" && claude --dangerously-skip-permissions)
+    fi
+}
+
+# List all active worktrees across all repos
+worktrees() {
+    local worktree_root="$HOME/git/worktrees"
+    if [[ ! -d "$worktree_root" ]]; then
+        echo "No worktrees found"
+        return 0
+    fi
+
+    local found=0
+    for repo_dir in "$worktree_root"/*/; do
+        [[ -d "$repo_dir" ]] || continue
+        local repo_name=$(basename "$repo_dir")
+
+        for wt_dir in "$repo_dir"/*/; do
+            [[ -d "$wt_dir" ]] || continue
+            local wt_name=$(basename "$wt_dir")
+            local branch=$(git -C "$wt_dir" branch --show-current 2>/dev/null)
+            local last_commit=$(git -C "$wt_dir" log -1 --format='%cr' 2>/dev/null)
+
+            if [[ $found -eq 0 ]]; then
+                printf "%-20s %-20s %-30s %s\n" "REPO" "WORKTREE" "BRANCH" "LAST ACTIVITY"
+                printf "%-20s %-20s %-30s %s\n" "----" "--------" "------" "-------------"
+                found=1
+            fi
+            printf "%-20s %-20s %-30s %s\n" "$repo_name" "$wt_name" "$branch" "$last_commit"
+        done
+    done
+
+    if [[ $found -eq 0 ]]; then
+        echo "No worktrees found"
+    fi
+}
+
+# Clean up stale worktrees (older than N days, default 7)
+# Usage: worktree-cleanup [days]
+worktree-cleanup() {
+    local max_age_days=${1:-7}
+    local worktree_root="$HOME/git/worktrees"
+    local now=$(date +%s)
+    local max_age_seconds=$((max_age_days * 86400))
+    local stale=()
+
+    if [[ ! -d "$worktree_root" ]]; then
+        echo "No worktrees found"
+        return 0
+    fi
+
+    for repo_dir in "$worktree_root"/*/; do
+        [[ -d "$repo_dir" ]] || continue
+        local repo_name=$(basename "$repo_dir")
+
+        for wt_dir in "$repo_dir"/*/; do
+            [[ -d "$wt_dir" ]] || continue
+            local wt_name=$(basename "$wt_dir")
+
+            # Get last commit timestamp
+            local last_ts=$(git -C "$wt_dir" log -1 --format=%ct 2>/dev/null)
+            if [[ -z "$last_ts" ]]; then
+                last_ts=0
+            fi
+
+            local age=$((now - last_ts))
+            if [[ $age -gt $max_age_seconds ]]; then
+                local last_commit=$(git -C "$wt_dir" log -1 --format='%cr' 2>/dev/null || echo "unknown")
+                local branch=$(git -C "$wt_dir" branch --show-current 2>/dev/null || echo "unknown")
+                stale+=("$repo_name|$wt_name|$branch|$last_commit|$wt_dir")
+            fi
+        done
+    done
+
+    if [[ ${#stale[@]} -eq 0 ]]; then
+        echo "No stale worktrees found (threshold: $max_age_days days)"
+        return 0
+    fi
+
+    echo "Stale worktrees (no commits in $max_age_days+ days):"
+    echo ""
+    printf "%-20s %-20s %-30s %s\n" "REPO" "WORKTREE" "BRANCH" "LAST ACTIVITY"
+    printf "%-20s %-20s %-30s %s\n" "----" "--------" "------" "-------------"
+
+    for entry in "${stale[@]}"; do
+        IFS='|' read -r repo wt branch last_commit wt_path <<< "$entry"
+        printf "%-20s %-20s %-30s %s\n" "$repo" "$wt" "$branch" "$last_commit"
+    done
+
+    echo ""
+    echo -n "Delete all ${#stale[@]} stale worktrees? [y/N] "
+    read -r confirm
+    if [[ "$confirm" =~ ^[Yy]$ ]]; then
+        for entry in "${stale[@]}"; do
+            IFS='|' read -r repo wt branch last_commit wt_path <<< "$entry"
+            local git_root="$HOME/git/$repo"
+
+            # Remove the worktree via git
+            if [[ -d "$git_root/.git" ]]; then
+                git -C "$git_root" worktree remove "$wt_path" --force 2>/dev/null
+            fi
+
+            # Clean up if directory still exists
+            if [[ -d "$wt_path" ]]; then
+                rm -rf "$wt_path"
+            fi
+
+            # Delete the branch if it exists
+            if [[ -n "$branch" && "$branch" != "main" && "$branch" != "unknown" ]]; then
+                git -C "$git_root" branch -D "$branch" 2>/dev/null
+            fi
+
+            echo "Removed $repo/$wt ($branch)"
+        done
+
+        # Clean up empty repo directories
+        for repo_dir in "$worktree_root"/*/; do
+            [[ -d "$repo_dir" ]] || continue
+            if [[ -z "$(ls -A "$repo_dir" 2>/dev/null)" ]]; then
+                rmdir "$repo_dir"
+            fi
+        done
+
+        echo "Done"
+    else
+        echo "Cancelled"
+    fi
+}
+
+# ============================================================================
+# Claude Session Management
+# ============================================================================
+# Source from claude-sessions submodule (the source of truth)
+# Uses the path of this script to find the submodule
+
+# Get the directory containing this script
+if [[ -n "$ZSH_VERSION" ]]; then
+    _zshrc_dir="${0:A:h}"
+elif [[ -n "${BASH_SOURCE[0]}" ]]; then
+    _zshrc_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+else
+    _zshrc_dir="$(cd "$(dirname "$0")" && pwd)"
+fi
+
+_claude_sessions_path="${_zshrc_dir}/../claude-sessions/Scripts/claude-sessions.sh"
+
+if [[ -f "$_claude_sessions_path" ]]; then
+    source "$_claude_sessions_path"
+elif [[ -f "$HOME/git/claude-sessions/Scripts/claude-sessions.sh" ]]; then
+    # Fallback to standalone repo if submodule not available
+    source "$HOME/git/claude-sessions/Scripts/claude-sessions.sh"
+fi
+unset _zshrc_dir _claude_sessions_path
+
+# ============================================================================
+# Aliases
+# ============================================================================
+
+alias gp='gitprojects'
