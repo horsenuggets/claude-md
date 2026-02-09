@@ -7,8 +7,8 @@ Another Claude instance is currently working in this repository. Create a git wo
 ## Steps
 
 1. Get the current repo name from the current directory (basename of the git root).
-2. Pick a random, unused name for the worktree. Use a quirky city name (e.g., tokyo, lisbon, cairo). Check `~/git/worktrees/<repo-name>/` to avoid collisions with existing worktree names.
-3. Create the worktree at `~/git/worktrees/<repo-name>/<worktree-name>` with a new feature branch named `feature/<worktree-name>`.
+2. Pick a random, unused name for the worktree. Use a quirky city name (e.g., tokyo, lisbon, cairo). Check `~/.claude/worktrees/<repo-name>/` to avoid collisions with existing worktree names.
+3. Create the worktree at `~/.claude/worktrees/<repo-name>/<worktree-name>` with a new feature branch named `feature/<worktree-name>`.
 4. Change your working directory to the new worktree.
 5. Confirm the new working directory and branch to the user.
 

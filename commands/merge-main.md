@@ -6,7 +6,7 @@ Merge all changes from the current worktree into the local main branch of the so
 
 ## Detecting the source repo
 
-1. Check if the current directory is inside `~/git/worktrees/`. If so, the repo name is the first directory under `worktrees/` (e.g., `~/git/worktrees/openclaw/tokyo` means the source repo is `openclaw`).
+1. Check if the current directory is inside `~/.claude/worktrees/`. If so, the repo name is the first directory under `worktrees/` (e.g., `~/.claude/worktrees/openclaw/tokyo` means the source repo is `openclaw`).
 2. Otherwise, check if the current directory is a git worktree (not the main working tree) by running `git rev-parse --git-common-dir`. If the common dir points to a repo in `~/git/`, use that repo name.
 3. If neither, tell the user this command should be run from a worktree.
 

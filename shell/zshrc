@@ -399,7 +399,7 @@ _WORKTREE_NAMES=(
 
 # Get a random worktree name not already in use for a given repo
 _get_worktree_name() {
-    local repo_dir="$HOME/git/worktrees/$1"
+    local repo_dir="$HOME/.claude/worktrees/$1"
     local attempts=0
     local max_attempts=50
 
@@ -434,10 +434,10 @@ cldw() {
     local repo_name=$(basename "$git_root")
     local worktree_name=$(_get_worktree_name "$repo_name")
     local branch_name="feature/$worktree_name"
-    local worktree_path="$HOME/git/worktrees/$repo_name/$worktree_name"
+    local worktree_path="$HOME/.claude/worktrees/$repo_name/$worktree_name"
 
     # Create parent directory
-    mkdir -p "$HOME/git/worktrees/$repo_name"
+    mkdir -p "$HOME/.claude/worktrees/$repo_name"
 
     # Create the worktree with a new branch from current HEAD
     echo "Creating worktree \"$worktree_name\" for $repo_name..."
@@ -461,7 +461,7 @@ cldw() {
 
 # List all active worktrees across all repos
 worktrees() {
-    local worktree_root="$HOME/git/worktrees"
+    local worktree_root="$HOME/.claude/worktrees"
     if [[ ! -d "$worktree_root" ]]; then
         echo "No worktrees found"
         return 0
@@ -496,7 +496,7 @@ worktrees() {
 # Usage: worktree-cleanup [days]
 worktree-cleanup() {
     local max_age_days=${1:-7}
-    local worktree_root="$HOME/git/worktrees"
+    local worktree_root="$HOME/.claude/worktrees"
     local now=$(date +%s)
     local max_age_seconds=$((max_age_days * 86400))
     local stale=()

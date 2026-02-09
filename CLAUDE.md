@@ -148,7 +148,7 @@ After opening a PR, continuously monitor its status until it is merged:
 
 Work in worktrees to isolate parallel tasks. This replaces Conductor.
 
-**Structure:** `~/git/worktrees/<repo-name>/<worktree-name>/`
+**Structure:** `~/.claude/worktrees/<repo-name>/<worktree-name>/`
 
 Each worktree gets a random city name and a `feature/<city-name>` branch.
 
