@@ -189,8 +189,13 @@ Each worktree has a `CONTEXT.md` file at its root for persistent context across 
 file is globally gitignored so it never gets committed.
 
 **When working in a worktree:**
-1. At the start of each session, read `CONTEXT.md` if it exists to restore context.
-2. Before ending a session (or periodically during long sessions), update `CONTEXT.md` with:
+1. At the start of each session, `CONTEXT.md` is auto-loaded via the SessionStart hook. Use it
+   to pick up where you left off.
+2. **Update `CONTEXT.md` constantly** - after every commit, after completing a subtask, after
+   making a key decision, or after hitting a blocker. Treat it like a save file. If the session
+   ends unexpectedly (context limit, crash, user closes terminal), the next session should be
+   able to resume seamlessly from `CONTEXT.md` alone.
+3. Always include:
    - What you were working on and the current status
    - Key decisions made and their rationale
    - Any blockers or next steps
