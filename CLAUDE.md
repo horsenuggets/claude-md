@@ -370,7 +370,7 @@ To automatically load these guidelines when Claude starts, configure a SessionSt
         "hooks": [
           {
             "type": "command",
-            "command": "cat ~/git/claude-md/CLAUDE.md"
+            "command": "cat ~/git/claude-md/CLAUDE.md ~/git/claude-md-luau/CLAUDE.md"
           }
         ]
       }
@@ -379,14 +379,16 @@ To automatically load these guidelines when Claude starts, configure a SessionSt
 }
 ```
 
+Omit `~/git/claude-md-luau/CLAUDE.md` if you don't work with Luau projects.
+
 **Windows paths:** On Windows, use forward slashes or escaped backslashes:
 ```json
-"command": "type %USERPROFILE%\\git\\claude-md\\CLAUDE.md"
+"command": "type %USERPROFILE%\\git\\claude-md\\CLAUDE.md %USERPROFILE%\\git\\claude-md-luau\\CLAUDE.md"
 ```
 
 Or with PowerShell:
 ```json
-"command": "Get-Content $env:USERPROFILE/git/claude-md/CLAUDE.md"
+"command": "Get-Content $env:USERPROFILE/git/claude-md/CLAUDE.md, $env:USERPROFILE/git/claude-md-luau/CLAUDE.md"
 ```
 
 A sample configuration file is included at `config/settings.json.example`.
