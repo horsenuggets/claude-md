@@ -174,6 +174,39 @@ sends their first message, rename the branch to something relevant to the task i
 Before making changes to a repository, check if another Claude instance is already working
 there. If so, use `/parallel` to create a worktree and work without conflicts.
 
+### Worktree Context (CONTEXT.md)
+
+Each worktree has a `CONTEXT.md` file at its root for persistent context across sessions. This
+file is globally gitignored so it never gets committed.
+
+**When working in a worktree:**
+1. At the start of each session, read `CONTEXT.md` if it exists to restore context.
+2. Before ending a session (or periodically during long sessions), update `CONTEXT.md` with:
+   - What you were working on and the current status
+   - Key decisions made and their rationale
+   - Any blockers or next steps
+   - Files that were modified and why
+
+**Format:**
+```md
+# Context
+
+## Current Task
+Brief description of what this worktree is for.
+
+## Status
+What has been done and what remains.
+
+## Key Decisions
+- Decision 1 and why
+- Decision 2 and why
+
+## Next Steps
+- What to do next
+```
+
+Keep it concise. This is a working scratchpad, not documentation.
+
 ## Commits
 
 - Always break commits down into logical parts

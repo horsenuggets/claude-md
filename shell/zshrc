@@ -447,6 +447,20 @@ cldw() {
         return 1
     fi
 
+    # Seed CONTEXT.md for persistent context across sessions
+    cat > "$worktree_path/CONTEXT.md" << 'CTXEOF'
+# Context
+
+## Current Task
+(Describe what this worktree is for)
+
+## Status
+New worktree, no work done yet.
+
+## Next Steps
+- (Awaiting first task)
+CTXEOF
+
     echo "Worktree created at $worktree_path"
     echo "Branch: $branch_name"
     echo "Starting Claude Code..."
