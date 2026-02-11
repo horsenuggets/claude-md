@@ -415,8 +415,13 @@ _get_worktree_name() {
         ((attempts++))
     done
 
-    # Fallback: use timestamp
-    echo "worktree-$(date +%s)"
+    # Fallback: append a number to a random name
+    local base="${_WORKTREE_NAMES[$((RANDOM % ${#_WORKTREE_NAMES[@]}))]}"
+    local n=2
+    while [[ -d "$repo_dir/${base}-${n}" ]]; do
+        ((n++))
+    done
+    echo "${base}-${n}"
 }
 
 # Start Claude Code in a new worktree
