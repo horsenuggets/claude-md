@@ -155,16 +155,20 @@ sends their first message, rename both the branch and folder to a descriptive ke
 matching the task (e.g., `tool-feedback-display`). Do not use slashes in the name since it
 must work as both a folder name and branch name.
 
-Rename the branch and folder right after understanding the task, then `cd` into the new path:
+Rename the branch and folder right after understanding the task using the `wt-rename`
+function, which safely handles the CWD by cd-ing out before the move:
 
 ```bash
-git branch -m <new-name>
-git worktree move . ~/.claude/worktrees/<repo>/<new-name>
-cd ~/.claude/worktrees/<repo>/<new-name>
+wt-rename <new-name>
 ```
+
+**Important:** Never run `git worktree move .` directly while your CWD is inside the
+worktree. This invalidates the CWD and breaks all subsequent shell commands. Always use
+`wt-rename` instead.
 
 **Shell commands:**
 - `cldw [message]` - Create a worktree for the current repo and launch Claude Code in it
+- `wt-rename <name>` - Rename current worktree and branch (safe CWD handling)
 - `worktrees` / `wt` - List all active worktrees with their branches and last activity
 - `worktree-cleanup [days]` / `wtc` - Find and remove stale worktrees (default: 7 days old)
 

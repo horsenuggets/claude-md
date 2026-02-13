@@ -530,6 +530,66 @@ worktrees() {
     fi
 }
 
+# Rename a worktree and its branch safely
+# Handles CWD invalidation by cd-ing out before the move
+# Usage: wt-rename <new-name>
+# Must be run from inside a worktree
+wt-rename() {
+    local new_name="$1"
+    if [[ -z "$new_name" ]]; then
+        echo "[Usage] wt-rename <new-name>"
+        echo "Renames the current worktree folder and branch."
+        return 1
+    fi
+
+    # Must be in a worktree (not the main working tree)
+    local git_common_dir
+    git_common_dir=$(git rev-parse --git-common-dir 2>/dev/null)
+    local git_dir
+    git_dir=$(git rev-parse --git-dir 2>/dev/null)
+    if [[ "$git_common_dir" == "$git_dir" ]]; then
+        echo "Error: not inside a worktree (this is the main working tree)"
+        return 1
+    fi
+
+    # Detect repo name from the worktree path
+    local current_path
+    current_path=$(pwd -P)
+    local worktree_root="$HOME/.claude/worktrees"
+    if [[ "$current_path" != "$worktree_root"/* ]]; then
+        echo "Error: not inside a Claude worktree ($worktree_root)"
+        return 1
+    fi
+
+    # Extract repo name (first dir under worktrees/)
+    local relative="${current_path#$worktree_root/}"
+    local repo_name="${relative%%/*}"
+    local new_path="$worktree_root/$repo_name/$new_name"
+
+    if [[ -d "$new_path" ]]; then
+        echo "Error: \"$new_path\" already exists"
+        return 1
+    fi
+
+    # Rename branch
+    git branch -m "$new_name" || return 1
+
+    # cd out before moving (avoids CWD invalidation)
+    cd "$worktree_root/$repo_name" || return 1
+
+    # Move worktree
+    git -C "$current_path" worktree move "$current_path" "$new_path" || {
+        echo "Error: worktree move failed, cd-ing back"
+        cd "$current_path" 2>/dev/null
+        return 1
+    }
+
+    # cd into the new path
+    cd "$new_path" || return 1
+    echo "Renamed worktree to \"$new_name\" at $new_path"
+    echo "Branch: $new_name"
+}
+
 # Clean up stale worktrees (older than N days, default 7)
 # Usage: worktree-cleanup [days]
 worktree-cleanup() {
