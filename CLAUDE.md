@@ -162,6 +162,10 @@ function, which safely handles the CWD by cd-ing out before the move:
 wt-rename <new-name>
 ```
 
+After `wt-rename` succeeds, it prints a `cd` command with the new path. You **must** run that
+`cd` command as your next Bash call to update your working directory. Claude Code's Bash tool
+tracks CWD externally, so the `cd` inside `wt-rename` does not carry over to subsequent calls.
+
 **Important:** Never run `git worktree move .` directly while your CWD is inside the
 worktree. This invalidates the CWD and breaks all subsequent shell commands. Always use
 `wt-rename` instead.

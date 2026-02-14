@@ -584,10 +584,12 @@ wt-rename() {
         return 1
     }
 
-    # cd into the new path
+    # cd into the new path (only affects interactive shells;
+    # Claude Code Bash tool needs a separate cd call)
     cd "$new_path" || return 1
-    echo "Renamed worktree to \"$new_name\" at $new_path"
+    echo "Renamed worktree to \"$new_name\""
     echo "Branch: $new_name"
+    echo "cd $new_path"
 }
 
 # Clean up stale worktrees (older than N days, default 7)
