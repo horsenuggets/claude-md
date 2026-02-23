@@ -444,11 +444,23 @@ cldw() {
         main_repo="$git_root"
     fi
 
-    # Prompt user for worktree context
-    echo "What will this worktree be about?"
-    echo -n "> "
+    # Get worktree context from arguments, stdin pipe,
+    # or editor
     local user_context
-    read -r user_context
+    if [[ $# -gt 0 ]]; then
+        user_context="$*"
+    elif [[ ! -t 0 ]]; then
+        user_context=$(cat)
+    else
+        local tmpfile=$(mktemp "${TMPDIR:-/tmp}/cldw-context.XXXXXX")
+        printf "# What will this worktree be about?\n" > "$tmpfile"
+        printf "# Write your task description below.\n" >> "$tmpfile"
+        printf "# Lines starting with # will be removed.\n" >> "$tmpfile"
+        printf "# Save and close the editor when done.\n\n" >> "$tmpfile"
+        ${EDITOR:-nano} "$tmpfile"
+        user_context=$(awk '!/^#/{lines[++n]=$0} END{s=1;e=n; while(s<=e&&lines[s]=="")s++; while(e>=s&&lines[e]=="")e--; for(i=s;i<=e;i++)print lines[i]}' "$tmpfile")
+        rm -f "$tmpfile"
+    fi
     if [[ -z "$user_context" ]]; then
         echo "Error: context cannot be empty"
         return 1
@@ -495,12 +507,14 @@ cldw() {
     mkdir -p "$(dirname "$worktree_path")"
 
     # Create the worktree with a new branch from main repo's HEAD
-    echo "Creating worktree \"$worktree_name\" for $repo_name..."
-    git -C "$main_repo" worktree add "$worktree_path" -b "$branch_name" 2>/dev/null
+    printf "Creating worktree \033[33m%s\033[0m for \033[34m%s\033[0m...\n" "$worktree_name" "$repo_name"
+    local git_output
+    git_output=$(git -C "$main_repo" worktree add "$worktree_path" -b "$branch_name" 2>&1)
     if [[ $? -ne 0 ]]; then
         echo "Error: failed to create worktree"
         return 1
     fi
+    printf "%s.\n" "$git_output"
 
     # Seed CONTEXT.md with the user's task description
     {
@@ -519,8 +533,7 @@ cldw() {
     # Reap stale Claude processes before starting a new one
     _claude_reap_silent 2
 
-    echo "Worktree created at $worktree_path"
-    echo "Branch: $branch_name"
+    printf "Worktree created at \033[34m%s\033[0m.\n" "$worktree_path"
     echo "Starting Claude Code..."
 
     # Set terminal tab title to the full worktree name
