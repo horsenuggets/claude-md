@@ -9,6 +9,10 @@ alias wtc='worktree-cleanup'
 alias wtr='wt-rename'
 
 # Additional useful aliases
+alias cfind='claude-find'
 alias cls='claude-ls'
-alias csp='claude-spawn'
+alias cmem='claude-mem'
 alias crepo='claude-repo'
+alias crp='claude-reap'
+alias csp='claude-spawn'
+alias crc='claude-recover'

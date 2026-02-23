@@ -148,31 +148,21 @@ After opening a PR, continuously monitor its status until it is merged:
 
 Work in worktrees to isolate parallel tasks. This replaces Conductor.
 
-**Structure:** `~/.claude/worktrees/<repo-name>/<worktree-name>/`
+**Structure:** `~/.claude/worktrees/<repo-name>/<prefix>/<worktree-name>/`
 
-Each worktree gets a random city name and a `feature/<city-name>` branch. After the user
-sends their first message, rename both the branch and folder to a descriptive kebab-case name
-matching the task (e.g., `tool-feedback-display`). Do not use slashes in the name since it
-must work as both a folder name and branch name.
+Running `cldw` prompts for a task description, uses an isolated Claude request to generate a
+branch name with the appropriate prefix (e.g., `feature/`, `bugfix/`, `chore/`), then creates
+the worktree and launches Claude Code with the description as its initial prompt. The worktree
+directory mirrors the branch name, creating nested prefix directories (e.g.,
+`~/.claude/worktrees/myrepo/bugfix/fix-login-error/` for branch `bugfix/fix-login-error`).
 
-Rename the branch and folder right after understanding the task using the `wt-rename`
-function, which safely handles the CWD by cd-ing out before the move:
-
-```bash
-wt-rename <new-name>
-```
-
-After `wt-rename` succeeds, it prints a `cd` command with the new path. You **must** run that
-`cd` command as your next Bash call to update your working directory. Claude Code's Bash tool
-tracks CWD externally, so the `cd` inside `wt-rename` does not carry over to subsequent calls.
-
-**Important:** Never run `git worktree move .` directly while your CWD is inside the
-worktree. This invalidates the CWD and breaks all subsequent shell commands. Always use
-`wt-rename` instead.
+`wt-rename` can still be used to rename the branch if needed. Never move or rename the
+worktree directory while a Claude Code session is active — it permanently bricks the session
+since the sandbox rejects all Bash commands when the CWD no longer exists.
 
 **Shell commands:**
-- `cldw [message]` - Create a worktree for the current repo and launch Claude Code in it
-- `wt-rename <name>` - Rename current worktree and branch (safe CWD handling)
+- `cldw` - Create a worktree for the current repo and launch Claude Code in it
+- `wt-rename <name>` - Rename the current worktree's branch
 - `worktrees` / `wt` - List all active worktrees with their branches and last activity
 - `worktree-cleanup [days]` / `wtc` - Find and remove stale worktrees (default: 7 days old)
 
@@ -366,9 +356,15 @@ The `shell/zshrc` file provides cross-platform shell functions:
 - `mkrelease <version>` - Create a release branch that merges release history
 
 **Worktree Workflow:**
-- `cldw [message]` - Create a worktree and launch Claude Code in it
+- `cldw` - Create a worktree and launch Claude Code in it
 - `worktrees` / `wt` - List all active worktrees across repos
 - `worktree-cleanup [days]` / `wtc` - Remove stale worktrees (default: 7 days)
+
+**Claude Process Management:**
+- `claude-mem` / `cmem` - Show all Claude processes and their memory usage
+- `claude-reap [days]` / `crp` - Kill orphaned Claude processes older than N days (default 2)
+- `claude-recover [path]` / `crc` - Find and resume sessions for a directory
+- `claude-find <keyword>` / `cfind` - Search all sessions by keyword
 
 **Claude Session Management:**
 - `claude-tracked` - Run claude with session tracking
