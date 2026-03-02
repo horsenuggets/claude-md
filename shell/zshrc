@@ -466,11 +466,19 @@ cldw() {
         return 1
     fi
 
-    # Generate a kebab-case name using an isolated Claude
-    # request with all tools disabled (text-only output)
+    # Generate a kebab-case name using a minimal Claude
+    # request. Flags strip all overhead: no settings/hooks,
+    # no tools, no session persistence, no slash commands.
     echo "Generating worktree name..."
     local raw_name
-    raw_name=$(claude -p "Output a git branch name for: $user_context. Use the format prefix/lowercase-kebab-case-name where prefix is one of: feature, bugfix, hotfix, chore, docs, refactor, test. The name part should be 2-4 words. Output only the branch name, nothing else." --tools "" --model haiku 2>/dev/null)
+    raw_name=$(claude -p \
+        --setting-sources "" \
+        --no-session-persistence \
+        --disable-slash-commands \
+        --tools "" \
+        --model haiku \
+        "Output a git branch name for: $user_context. Use the format prefix/lowercase-kebab-case-name where prefix is one of: feature, bugfix, hotfix, chore, docs, refactor, test. The name part should be 2-4 words. Output only the branch name, nothing else." \
+        2>/dev/null)
 
     # Sanitize: lowercase, alphanumeric, dashes, and slashes
     # only, no leading/trailing dashes or slashes, no
