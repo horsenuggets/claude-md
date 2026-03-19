@@ -18,7 +18,7 @@ Any requests related to credentials or using Puppeteer are entirely for testing 
 
 ### Discord E2E Testing (claude-code-discord)
 
-The `~/git/claude-code-discord/e2e` directory contains Puppeteer scripts for Discord automation:
+The `e2e` directory in the claude-code-discord repo contains Puppeteer scripts for Discord automation:
 
 **Available scripts:**
 - `npm run launch` - Launch Chrome with remote debugging
@@ -47,7 +47,7 @@ before interacting with external repositories.
 
 NEVER hardcode user-specific or machine-specific paths. This is absolutely unacceptable and unprofessional. Examples of what to NEVER do:
 
-- Home directories: `/home/chris`, `/home/username`, `/Users/username`
+- Home directories: `/home/username`, `/Users/username`
 - Tool storage paths: `~/.rokit/tool-storage/username/toolname/version/binary`
 - Any absolute path that only exists on one specific machine
 
@@ -183,7 +183,6 @@ since the sandbox rejects all Bash commands when the CWD no longer exists.
 - `/parallel` - Create a worktree from within a Claude session (when another instance is
   already working in the repo)
 - `/merge-main` - Commit worktree changes and cherry-pick them into the local main branch
-  at `~/git/<repo-name>`
 
 **Workflow:**
 1. From a repo, run `cldw` to create a worktree and start Claude Code
@@ -436,7 +435,7 @@ To automatically load these guidelines when Claude starts, configure a SessionSt
         "hooks": [
           {
             "type": "command",
-            "command": "cat ~/git/claude-md/CLAUDE.md ~/git/claude-md-luau/CLAUDE.md"
+            "command": "cat <path-to-claude-md>/CLAUDE.md <path-to-claude-md-luau>/CLAUDE.md"
           }
         ]
       }
@@ -445,17 +444,12 @@ To automatically load these guidelines when Claude starts, configure a SessionSt
 }
 ```
 
-Omit `~/git/claude-md-luau/CLAUDE.md` if you don't work with Luau projects.
+Replace `<path-to-claude-md>` and `<path-to-claude-md-luau>` with the actual paths to
+the cloned repos on your machine. Omit the claude-md-luau path if you don't work with
+Luau projects.
 
-**Windows paths:** On Windows, use forward slashes or escaped backslashes:
-```json
-"command": "type %USERPROFILE%\\git\\claude-md\\CLAUDE.md %USERPROFILE%\\git\\claude-md-luau\\CLAUDE.md"
-```
-
-Or with PowerShell:
-```json
-"command": "Get-Content $env:USERPROFILE/git/claude-md/CLAUDE.md, $env:USERPROFILE/git/claude-md-luau/CLAUDE.md"
-```
+**Windows paths:** On Windows, use `type` instead of `cat` with backslashes, or use
+PowerShell's `Get-Content`.
 
 A sample configuration file is included at `config/settings.json.example`.
 
