@@ -1,5 +1,5 @@
 ---
-description: Add the following to your memory in ~/git/claude-md/CLAUDE.md
+description: Add the following to your memory in either ~/.claude/CLAUDE.md, ~/git/claude-md/CLAUDE.md, or ~/git/claude-md-luau/CLAUDE.md
 ---
 
 $ARGUMENTS

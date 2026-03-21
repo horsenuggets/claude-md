@@ -294,6 +294,22 @@ CHANGELOG.md should follow this format:
 - When things can be sorted alphabetically, definitely do that (e.g., imports, table keys, function parameters)
 - Constants should be placed above the module definition
 
+## Learning from Corrections
+
+When the user corrects your behavior or you detect a pattern worth preserving, always save
+it to the appropriate memory location:
+
+- **Local project auto-memory** for project-specific patterns
+- **This repo's CLAUDE.md** for broad behavioral principles that apply everywhere
+- **Supplemental CLAUDE.md repos** (e.g., claude-md-luau) for domain-specific patterns
+- **`~/.claude/CLAUDE.md`** for machine-specific settings
+- **Knowledge folders** in the appropriate repo for reference data (e.g., API details)
+
+Save important reusable knowledge (API details, asset IDs, how things actually work vs how
+you assumed they work) to the appropriate location so you can reference it in future sessions.
+When you learn something the hard way, that is exactly the kind of information that must be
+saved.
+
 ## Tools
 
 - Use `fd` instead of `find`
@@ -311,7 +327,7 @@ The filename (without `.md`) becomes the command name (e.g., `ship.md` creates `
 
 This repository includes the following custom slash commands in the `commands/` directory:
 
-- `/all <change>` - Apply a change across all local git repos in ~/git and commit
+- `/all <change>` - Apply a change across all local Git repos in ~/git and commit
 - `/check` - Double-check current work against all guidelines in CLAUDE.md
 - `/commit` - Analyze uncommitted changes and break them into logical commits
 - `/merge-main` - Commit worktree changes and merge into the local main branch

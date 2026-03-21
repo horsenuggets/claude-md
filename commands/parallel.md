@@ -2,11 +2,11 @@
 description: Create a worktree to work in parallel with another Claude instance
 ---
 
-Another Claude instance is currently working in this repository. Create a git worktree so you can work on this repo in parallel without conflicts.
+Another Claude instance is currently working in this repository. Create a Git worktree so you can work on this repo in parallel without conflicts.
 
 ## Steps
 
-1. Get the current repo name from the current directory (basename of the git root).
+1. Get the current repo name from the current directory (basename of the Git root).
 2. Pick a random, unused name for the worktree from `data/workspace-names.txt` (relative to the claude-md repo root). Check `~/.claude/worktrees/<repo-name>/` to avoid collisions with existing worktree names.
 3. Create the worktree at `~/.claude/worktrees/<repo-name>/<worktree-name>` with a new feature branch named `feature/<worktree-name>`.
 4. Change your working directory to the new worktree.

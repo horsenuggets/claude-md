@@ -7,7 +7,7 @@ Claude Code guidelines and workflow automation.
 This repository provides:
 
 - **Guidelines** - General coding standards and workflow conventions for Claude Code
-- **Shell Functions** - Cross-platform utilities for git workflows, worktrees, and Claude session management
+- **Shell Functions** - Cross-platform utilities for Git workflows, worktrees, and Claude session management
 - **Slash Commands** - Custom Claude commands for commits, releases, and multi-repo operations
 - **Sync Scripts** - Tools to keep your workflow in sync across machines
 

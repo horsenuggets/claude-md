@@ -1,12 +1,12 @@
 ---
-description: Apply a change across all local git repos in ~/git and commit
+description: Apply a change across all local Git repos in ~/git and commit
 ---
 
-Apply the requested change across all git repositories in ~/git and commit each change.
+Apply the requested change across all Git repositories in ~/git and commit each change.
 
 ## Instructions
 
-1. First, find all git repositories in ~/git by searching for directories containing a `.git` folder. Exclude:
+1. First, find all Git repositories in ~/git by searching for directories containing a `.git` folder. Exclude:
    - Directories inside `node_modules`, `Packages`, `DevPackages`, `Submodules`, `_Index`, `modules`
    - Repositories in `~/git/archive`
    - Worktree directories if the main repo is also present (prefer the non-worktree location)
