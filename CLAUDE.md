@@ -270,6 +270,11 @@ Keep it concise. This is a working scratchpad, not documentation.
 - Do NOT manually create tags - CI automatically creates tags when releasing
 - Do NOT manually create GitHub releases - always let the publish workflow create them
   automatically. If the workflow fails, fix the issue and re-run the workflow.
+- NEVER bump a dependency version in rokit.toml or wally.toml to a version that has not been
+  fully released and published yet. Always ensure the dependency is available before
+  referencing it. Bumping to an unreleased version breaks CI and other consumers.
+- When releasing a tool that other repos depend on, always complete the full release workflow
+  (merge, publish, verify availability) before bumping dependents to the new version.
 
 ## Changelog Format
 
