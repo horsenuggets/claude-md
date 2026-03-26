@@ -242,6 +242,7 @@ Keep it concise. This is a working scratchpad, not documentation.
 - Text should be LF normalized
 - Group all constants together without blank lines between them
 - Always read through existing code to match style
+- Hex color codes should always use lowercase letters (e.g., `#cc7722`, not `#CC7722`)
 
 ## Comments
 
