@@ -82,14 +82,7 @@ Choose the appropriate path based on what the repo supports:
     git checkout main && git pull
     ```
 
-15. Use `mkrelease` to create the release branch (preferred):
-    ```bash
-    mkrelease X.Y.Z
-    git push -u origin release-X.Y.Z
-    gh prc --base release --title "Release X.Y.Z"
-    ```
-
-    If `mkrelease` is not available, do it manually:
+15. Create the release branch:
     ```bash
     git checkout main && git pull
     git checkout -b release-X.Y.Z
@@ -97,6 +90,8 @@ Choose the appropriate path based on what the repo supports:
     git merge origin/release --no-edit -X ours
     git diff origin/main --name-only | xargs -I {} git checkout origin/main -- {}
     git add -A && git commit --amend --no-edit
+    git push -u origin release-X.Y.Z
+    gh prc --base release --title "Release X.Y.Z"
     ```
 
 16. Set PR body:

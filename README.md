@@ -7,135 +7,61 @@ Claude Code guidelines and workflow automation.
 This repository provides:
 
 - **Guidelines** - General coding standards and workflow conventions for Claude Code
-- **Shell Functions** - Cross-platform utilities for Git workflows, worktrees, and Claude session management
 - **Slash Commands** - Custom Claude commands for commits, releases, and multi-repo operations
-- **Sync Scripts** - Tools to keep your workflow in sync across machines
 
-## Quick Start
+## Setup
 
-### macOS / Linux / WSL
+Clone the repository and symlink the slash commands to `~/.claude/commands/`:
 
 ```bash
-# Clone the repository
 git clone https://github.com/horsenuggets/claude-md.git ~/git/claude-md
 
-# Run the installer
-~/git/claude-md/scripts/install.sh
+# Symlink commands
+for cmd in ~/git/claude-md/commands/*.md; do
+    ln -sf "$cmd" ~/.claude/commands/
+done
 ```
 
-### Windows (PowerShell)
+To load the guidelines automatically, configure a SessionStart hook in
+`~/.claude/settings.json`:
 
-```powershell
-# Clone the repository
-git clone https://github.com/horsenuggets/claude-md.git $env:USERPROFILE\git\claude-md
-
-# Run the installer (may need admin for symlinks)
-& $env:USERPROFILE\git\claude-md\scripts\install.ps1
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat <path-to-claude-md>/CLAUDE.md"
+          }
+        ]
+      }
+    ]
+  }
+}
 ```
-
-### Windows (Command Prompt)
-
-```cmd
-git clone https://github.com/horsenuggets/claude-md.git %USERPROFILE%\git\claude-md
-%USERPROFILE%\git\claude-md\scripts\install.bat
-```
-
-## What Gets Installed
-
-The installer configures:
-
-1. **Shell Configuration** - Sources `shell/zshrc` from your shell rc file
-2. **Claude Commands** - Symlinks commands to `~/.claude/commands/`
-3. **Startup Hook** - Loads CLAUDE.md guidelines when Claude starts
-4. **Session Directory** - Creates `~/.claude-sessions/` for session management
-
-## Available Shell Functions
-
-### Git Utilities
-
-| Function | Description |
-|----------|-------------|
-| `shipcheck` | Check if repo has uncommitted changes, unpushed commits, or unreleased changes |
-| `ghprc` | `gh pr create` wrapper that targets origin remote and adds @me as assignee |
-| `genpass [len]` | Generate random password (default 20 chars) and copy to clipboard |
-| `mkrelease <ver>` | Create release branch that merges release history while keeping main's content |
-
-### Worktree Workflow
-
-| Function | Alias | Description |
-|----------|-------|-------------|
-| `cldw [message]` | | Create a worktree and launch Claude Code in it |
-| `worktrees` | `wt` | List all active worktrees across repos |
-| `worktree-cleanup [days]` | `wtc` | Remove stale worktrees (default: 7 days) |
-
-### Claude Session Management
-
-| Function | Alias | Description |
-|----------|-------|-------------|
-| `claude-ls` | `cls` | List active Claude sessions |
-| `claude-spawn <dir> [task]` | `csp` | Spawn Claude in new tmux window |
-| `claude-repo <name> [task]` | `crepo` | Spawn Claude in a repo from ~/git |
-| `claude-send <id> <msg>` | | Send message to another Claude session |
-| `claude-broadcast <msg>` | | Send message to all Claude sessions |
-| `claude-inbox` | | Read messages for current session |
-| `claude-cleanup` | | Remove stale sessions |
-| `claude-kill <id>` | | Kill a specific Claude session |
-| `claude-killall` | | Kill all Claude sessions |
-| `claude-start` | | Start or attach to tmux claude session |
 
 ## Available Slash Commands
 
-| Command | Description |
-|---------|-------------|
-| `/commit` | Analyze changes and create logical commits |
-| `/push` | Commit and push to remote |
-| `/release [type]` | Full release workflow (patch/minor/major) |
-| `/ship` | Shortcut for `/push` + `/release patch` |
-| `/all <change>` | Apply change across all repos in ~/git |
-| `/check` | Verify compliance with CLAUDE.md guidelines |
-| `/repo <name>` | Work in a specific repository |
-| `/parallel` | Create worktree for parallel work |
-| `/merge-main` | Merge worktree changes into local main |
-| `/remember <note>` | Add note to CLAUDE.md |
-
-## Syncing Updates
-
-Keep your workflow configuration up to date:
-
-```bash
-# Pull latest changes
-~/git/claude-md/scripts/sync.sh
-
-# Pull and push local changes
-~/git/claude-md/scripts/sync.sh -P
-
-# Full sync with submodule updates
-~/git/claude-md/scripts/sync.sh -a
-```
+| Command            | Description                                 |
+| ------------------ | ------------------------------------------- |
+| `/all <change>`    | Apply change across all repos in ~/git      |
+| `/check`           | Verify compliance with CLAUDE.md guidelines |
+| `/commit`          | Analyze changes and create logical commits  |
+| `/merge-main`      | Merge worktree changes into local main      |
+| `/parallel`        | Create worktree for parallel work           |
+| `/push`            | Commit and push to remote                   |
+| `/release [type]`  | Full release workflow (patch/minor/major)   |
+| `/remember <note>` | Add note to CLAUDE.md                       |
+| `/repo <name>`     | Work in a specific repository               |
+| `/ship`            | Shortcut for `/push` + `/release patch`     |
 
 ## Using as a Submodule
-
-Add to your project:
 
 ```bash
 git submodule add https://github.com/horsenuggets/claude-md.git Submodules/claude-md
 ```
-
-Update all submodules across your repos:
-
-```bash
-~/git/claude-md/scripts/update-submodules.sh
-```
-
-## Platform Support
-
-| Platform | Shell Config | Commands | Session Mgmt |
-|----------|-------------|----------|--------------|
-| macOS | zsh/bash | Yes | Yes (tmux) |
-| Linux | zsh/bash | Yes | Yes (tmux) |
-| WSL | zsh/bash | Yes | Yes (tmux) |
-| Git Bash | bash | Yes | Limited |
-| PowerShell | profile.ps1 | Yes | Partial |
 
 ## License
 
