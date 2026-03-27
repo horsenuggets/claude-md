@@ -44,18 +44,19 @@ To load the guidelines automatically, configure a SessionStart hook in
 
 ## Available Slash Commands
 
-| Command            | Description                                 |
-| ------------------ | ------------------------------------------- |
-| `/all <change>`    | Apply change across all repos in ~/git      |
-| `/check`           | Verify compliance with CLAUDE.md guidelines |
-| `/commit`          | Analyze changes and create logical commits  |
-| `/merge-main`      | Merge worktree changes into local main      |
-| `/parallel`        | Create worktree for parallel work           |
-| `/push`            | Commit and push to remote                   |
-| `/release [type]`  | Full release workflow (patch/minor/major)   |
-| `/remember <note>` | Add note to CLAUDE.md                       |
-| `/repo <name>`     | Work in a specific repository               |
-| `/ship`            | Shortcut for `/push` + `/release patch`     |
+| Command            | Description                                  |
+| ------------------ | -------------------------------------------- |
+| `/all <change>`    | Apply change across all repos in ~/git       |
+| `/check`           | Verify compliance with CLAUDE.md guidelines  |
+| `/commit`          | Analyze changes and create logical commits   |
+| `/merge-main`      | Merge worktree changes into local main       |
+| `/parallel`        | Create worktree for parallel work            |
+| `/push`            | Commit and push to remote                    |
+| `/release [type]`  | Full release workflow (patch/minor/major)    |
+| `/remember <note>` | Add note to CLAUDE.md                        |
+| `/repo <name>`     | Work in a specific repository                |
+| `/ship`            | Shortcut for `/push` + `/release patch`      |
+| `/topic`           | Generate topic name and copy to clipboard    |
 
 ## Using as a Submodule
 
