@@ -111,6 +111,15 @@ the suffix. Use `chore/bump-version` instead of `chore/release-0.1.0`.
 5. Squash merge to main
 6. Switch back to main branch when done
 
+**CRITICAL: Always branch from `origin/main`, never local `main`.** Local main may have
+unpushed commits that will contaminate the new branch. Before creating a branch, always run
+`git fetch origin` and branch from `origin/main`:
+```
+git fetch origin
+git checkout -b feature/my-feature origin/main
+```
+This prevents unpushed local commits from leaking into PRs where they don't belong.
+
 ### Release Workflow
 
 1. Update VERSION file with new version
@@ -144,15 +153,19 @@ automatically adds the user as an assignee. All other flags work the same way (e
 
 ### PR Monitoring
 
-After opening a PR, continuously monitor its status until it is merged:
+**CRITICAL: Never leave a PR open. Every PR you create must be seen through to merge.**
+After opening a PR, continuously poll its status until it is fully merged:
 
-1. Watch for CI check results
-2. If checks fail, investigate the failure, fix the issue, and push updates
-3. Keep iterating until all checks pass
+1. Poll CI check results every 30-60 seconds until all checks complete
+2. If checks fail, read the CI logs, investigate the failure, fix the issue, and push updates
+3. Keep iterating — fix, push, poll, repeat — until all checks pass
 4. Wait for GitHub Copilot's review before merging (manually request a review from Copilot if
    needed)
 5. Once all checks pass and Copilot has reviewed, merge immediately
-6. Do not abandon a PR mid-process; see it through to completion
+6. After merging, verify the PR state is MERGED before moving on
+7. Do not end the conversation or move to the next task while a PR is still open
+8. If a PR is truly blocked by an external issue (e.g., upstream bug), explicitly tell the
+   user and get confirmation before deferring it
 
 ### Concurrent Work (Worktree Workflow)
 
@@ -331,13 +344,18 @@ The filename (without `.md`) becomes the command name (e.g., `ship.md` creates `
 This repository includes the following custom slash commands in the `commands/` directory:
 
 - `/all <change>` - Apply a change across all local Git repos in ~/git and commit
+- `/audit` - Scan recent work across all repos for guideline violations and suspicious changes
 - `/check` - Double-check current work against all guidelines in CLAUDE.md
 - `/commit` - Analyze uncommitted changes and break them into logical commits
 - `/merge-main` - Commit worktree changes and merge into the local main branch
 - `/parallel` - Create a worktree to work in parallel with another Claude instance
+- `/prompt <repo> <task>` - Generate a prompt for another Claude session and copy to clipboard
 - `/push` - Analyze changes, create logical commits, and push to remote
 - `/release [patch|minor|major]` - Full release workflow with version bump and changelog
 - `/remember <note>` - Add a note to CLAUDE.md memory
 - `/repo <name>` - Work in a specific repository, checking ~/git first
 - `/ship` - Push changes and release a patch version (shortcut for /push + /release patch)
+- `/status` - Show full status of all repos, PRs, and local changes
+- `/topic` - Generate a sentence-case topic name from the conversation and copy to clipboard
+- `/topic` - Generate a sentence-case topic name from the conversation and copy to clipboard
 
