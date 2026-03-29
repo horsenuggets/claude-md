@@ -151,11 +151,14 @@ Choose the appropriate path based on what the repo supports:
     - Whether release is public
     - Any issues encountered
 
+### Phase 7: Post-Work Cleanup
+
+23. Run the post-work cleanup checklist from CLAUDE.md to ensure the repo is left in a fully clean state (on main, no dirty submodules, no unpushed commits, no stale branches).
+
 ## Error Handling
 
 - If the release workflow fails, analyze the error and report to the user
 - If the release is created as a draft, inform the user they may need to publish manually
 - If checks keep failing after 3 attempts, ask the user for guidance
-- Always clean up temporary branches
 
 ARGUMENTS: $ARGUMENTS

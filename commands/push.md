@@ -37,3 +37,5 @@ Analyze all uncommitted changes in the current repository, create logical commit
    - Push the feature branch with `git push -u origin <branch-name>`
    - Create a PR to the original branch using `gh prc` with a clear title and summary
    - Report the PR URL to the user
+
+9. After pushing (or after a PR is merged), run the post-work cleanup checklist from CLAUDE.md to ensure the repo is left in a fully clean state (on main, no dirty submodules, no unpushed commits, no stale branches).

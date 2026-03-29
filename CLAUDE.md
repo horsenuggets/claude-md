@@ -109,7 +109,7 @@ the suffix. Use `chore/bump-version` instead of `chore/release-0.1.0`.
 3. Create a PR to main
 4. PR must pass all checks (format, test, static analysis, branch naming)
 5. Squash merge to main
-6. Switch back to main branch when done
+6. Run the post-work cleanup checklist (see below)
 
 **CRITICAL: Always branch from `origin/main`, never local `main`.** Local main may have
 unpushed commits that will contaminate the new branch. Before creating a branch, always run
@@ -119,6 +119,28 @@ git fetch origin
 git checkout -b feature/my-feature origin/main
 ```
 This prevents unpushed local commits from leaking into PRs where they don't belong.
+
+### Post-Work Cleanup
+
+After completing work in a repository (merging a PR, finishing a release, completing a task),
+always run through this checklist before moving on. The repo should be left in a fully clean
+state with no loose ends.
+
+1. **Switch to main and pull**: `git checkout main && git pull`
+2. **Check branch**: Verify you are on `main` (not a stale feature branch)
+3. **Check working tree**: `git status` should show nothing — no modified files, no untracked
+   files, no staged changes
+4. **Check submodules**: `git submodule status` should show no `+` prefixes (which indicate
+   the submodule is at a different commit than what the superproject expects). If dirty, run
+   `git submodule update --recursive` to reset them, or commit the pointer updates if they
+   are intentional
+5. **Check for unpushed commits**: `git log origin/main..HEAD` should be empty
+6. **Delete merged local branches**: Clean up any local feature branches that have been merged
+   (`git branch --merged main | grep -v main | xargs git branch -d`)
+
+If any step reveals issues, fix them before moving on. Do not leave a repo in a half-clean
+state. This applies to all commands that complete work: `/push`, `/ship`, `/release`,
+`/commit` (when followed by a push), and any manual workflow that ends with merged changes.
 
 ### Release Workflow
 
@@ -247,6 +269,16 @@ Keep it concise. This is a working scratchpad, not documentation.
 - Do not co-author yourself in commits
 - Use sentence case for commit messages (start with a capital letter)
 - Do NOT use conventional commit prefixes like `test:`, `chore:`, `feat:`, `fix:`, etc.
+
+## File and Folder Naming
+
+- Use PascalCase for all folder and file names in the repository, even for non-Luau files
+  like Terraform (.tf), configuration, and infrastructure code
+- This is a deliberate stylistic choice to maintain consistency across the entire project,
+  even when it diverges from community conventions for those tools
+- For example, `Terraform/Main.tf` instead of `terraform/main.tf`
+- Exceptions: files that must be lowercase for tooling compatibility (e.g., `.gitignore`,
+  `package.json`, `rokit.toml`, `wally.toml`, `.luaurc`, `Makefile`)
 
 ## Formatting
 

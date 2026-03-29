@@ -130,6 +130,10 @@ Push all uncommitted changes and release a patch version. This is a shortcut for
     - Whether release is public
     - Any issues encountered
 
+### Phase 7: Post-Work Cleanup
+
+26. Run the post-work cleanup checklist from CLAUDE.md to ensure the repo is left in a fully clean state (on main, no dirty submodules, no unpushed commits, no stale branches).
+
 ## Error Handling
 
 - If the release workflow fails, analyze the error and report it to the user
