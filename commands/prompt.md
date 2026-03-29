@@ -6,29 +6,37 @@ Generate a clipboard-ready prompt for a new Claude Code session.
 
 ## Arguments
 
-The first argument is the repo name (e.g., `commandline-luau`, `openclaw`).
-Everything after is the task description.
-
-Example: `/dispatch commandline-luau sort flags alphabetically in help output`
+`$ARGUMENTS` can be:
+- A repo name and task: `/prompt commandline-luau sort flags alphabetically`
+- Just a task (infers repo from cwd): `/prompt add tab completion support`
+- Empty or `this`: generate a prompt from the current conversation context, identifying
+  the repo and task automatically
 
 ## Instructions
 
-1. Find the repo by searching ~/git recursively for a directory matching the repo name
-2. Read the repo's CLAUDE.md (if any) to understand context, but do NOT include it in the
-   prompt
-3. Build a concise prompt like this:
+1. **Determine the repo and task:**
+   - If arguments include a repo name, use it. Otherwise infer from the current working
+     directory or conversation context.
+   - If the task is empty or "this", analyze the recent conversation to identify what
+     work should be handed off to a new session. Be specific about what needs to be done.
+
+2. **Build a concise prompt:**
 
 ```
 /repo <repo-name>
 
-<task description, expanded slightly if the user's input was terse — but keep it under
-a few sentences>
+<task description — specific enough that a fresh session can start immediately, but
+concise. Include key decisions already made if relevant. Keep it under a paragraph.>
 ```
 
-4. Copy the prompt to the clipboard using `pbcopy`
-5. Tell the user it's on their clipboard and ready to paste into a new session
+3. Copy the prompt to the clipboard:
+   - **macOS**: `pbcopy`
+   - **Linux**: `xclip -selection clipboard`
+   - **Windows**: `Set-Clipboard`
 
-Keep the prompt minimal — just the repo and what to do. Do NOT include project context,
-architecture details, or conversation history. The new session will load its own CLAUDE.md.
+4. Tell the user it's on their clipboard and ready to paste into a new session.
 
-$ARGUMENTS
+Keep the prompt minimal — just the repo and what to do. Do NOT include full project
+context, architecture details, or file contents. The new session will load its own
+CLAUDE.md. But DO include key decisions or design choices from the current conversation
+that the new session needs to know.
