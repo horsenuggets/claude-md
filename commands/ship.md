@@ -42,7 +42,7 @@ Push all uncommitted changes and release a patch version. This is a shortcut for
 
 11. If `wally.toml` exists in the repo and `./Submodules/luau-cicd/Scripts/SyncVersion.luau` is available, sync the version by running:
     ```
-    lune run ./Submodules/luau-cicd/Scripts/SyncVersion.luau
+    ./Submodules/luau-cicd/Scripts/SyncVersion.luau
     ```
 
 12. Update `CHANGELOG.md` with the new version section. Analyze commits since the last release tag to generate changelog entries. Format:

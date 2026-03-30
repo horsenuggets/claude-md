@@ -49,7 +49,7 @@ assuming a specific setup.
 9. If `wally.toml` exists and `./Submodules/luau-cicd/Scripts/SyncVersion.luau` is
    available, sync the version:
    ```
-   lune run ./Submodules/luau-cicd/Scripts/SyncVersion.luau
+   ./Submodules/luau-cicd/Scripts/SyncVersion.luau
    ```
 
 10. If `CHANGELOG.md` exists, update it with the new version section. Analyze commits since
