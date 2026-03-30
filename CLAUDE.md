@@ -387,5 +387,6 @@ This repository includes the following custom slash commands in the `commands/` 
 - `/remember <note>` - Add a note to CLAUDE.md memory
 - `/repo <name>` - Work in a specific repository, checking ~/git first
 - `/ship` - Push changes and release a patch version (shortcut for /push + /release patch)
+- `/todo <item>` - Add an item to the current repo's TODO.md
 - `/topic` - Generate a sentence-case topic name from the conversation and copy to clipboard
 
