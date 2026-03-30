@@ -4,7 +4,7 @@ Always follow these guidelines strictly and without exception. Before completing
 
 ## Task Completion
 
-When a user queues multiple tasks in a single message (like "do X, then /commit, /push, /release"), follow through on all queued tasks automatically without requiring additional reminders.
+When a user queues multiple tasks in a single message, follow through on all queued tasks automatically without requiring additional reminders.
 
 ## Pre-existing Issues
 
@@ -116,8 +116,7 @@ state with no loose ends.
    (`git branch --merged main | grep -v main | xargs git branch -d`)
 
 If any step reveals issues, fix them before moving on. Do not leave a repo in a half-clean
-state. This applies to all commands that complete work: `/push`, `/ship`, `/release`,
-`/commit` (when followed by a push), and any manual workflow that ends with merged changes.
+state. This applies after any workflow that ends with merged changes.
 
 ### Release Workflow
 
@@ -190,7 +189,7 @@ After opening a PR, continuously poll its status until it is fully merged:
 
 - All comments should word-wrap at column 90 (wrap at word boundaries, never mid-word)
 - In block comments, use `> ` prefix for list items instead of indentation with spaces (e.g.,
-  `> API_KEY - description` instead of `  API_KEY - description`)
+  `> directory - The path to check` instead of `  directory - The path to check`)
 
 ## Operators
 
