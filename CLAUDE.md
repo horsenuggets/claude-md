@@ -43,6 +43,13 @@ not owned by the user unless given explicit permission. This includes forked ups
 third-party dependencies, and any repo not under the user's GitHub account. Always confirm
 before interacting with external repositories.
 
+## CRITICAL: No Environment Assumptions
+
+When working on a repository, never assume you can utilize context about the user's personal
+environment, shell configuration, or other repositories. Each repo must be self-contained and
+modular, only utilizing dependencies that are explicitly declared. Do not reference or depend
+on tools, configs, or conventions that are not part of the project's own dependency tree.
+
 ## CRITICAL: No Hardcoded Paths
 
 NEVER hardcode user-specific or machine-specific paths. This is absolutely unacceptable and unprofessional. Examples of what to NEVER do:
@@ -68,12 +75,6 @@ Code must work on any machine, including CI environments. If you find yourself t
 - Additional details can follow the description (usage examples, etc.)
 
 ## Git Workflow
-
-When the user mentions a repository, always check recursively in `~/git` to see if it is
-already cloned before cloning it elsewhere.
-
-Never work inside a submodule directory. Instead, find the standalone repository in `~/git`
-and make changes there.
 
 ### Branch Strategy
 
@@ -189,80 +190,6 @@ After opening a PR, continuously poll its status until it is fully merged:
 8. If a PR is truly blocked by an external issue (e.g., upstream bug), explicitly tell the
    user and get confirmation before deferring it
 
-### Concurrent Work (Worktree Workflow)
-
-Work in worktrees to isolate parallel tasks. This replaces Conductor.
-
-**Structure:** `~/.claude/worktrees/<repo-name>/<prefix>/<worktree-name>/`
-
-Running `cldw` prompts for a task description, uses an isolated Claude request to generate a
-branch name with the appropriate prefix (e.g., `feature/`, `bugfix/`, `chore/`), then creates
-the worktree and launches Claude Code with the description as its initial prompt. The worktree
-directory mirrors the branch name, creating nested prefix directories (e.g.,
-`~/.claude/worktrees/myrepo/bugfix/fix-login-error/` for branch `bugfix/fix-login-error`).
-
-`wt-rename` can still be used to rename the branch if needed. Never move or rename the
-worktree directory while a Claude Code session is active — it permanently bricks the session
-since the sandbox rejects all Bash commands when the CWD no longer exists.
-
-**Shell commands:**
-- `cldw` - Create a worktree for the current repo and launch Claude Code in it
-- `wt-rename <name>` - Rename the current worktree's branch
-- `worktrees` / `wt` - List all active worktrees with their branches and last activity
-- `worktree-cleanup [days]` / `wtc` - Find and remove stale worktrees (default: 7 days old)
-
-**Slash commands:**
-- `/parallel` - Create a worktree from within a Claude session (when another instance is
-  already working in the repo)
-- `/merge-main` - Commit worktree changes and cherry-pick them into the local main branch
-
-**Workflow:**
-1. From a repo, run `cldw` to create a worktree and start Claude Code
-2. Do your work in the worktree (isolated from main)
-3. Run `/merge-main` to bring changes back into the local main branch
-4. Periodically run `wtc` to clean up old worktrees
-
-Before making changes to a repository, check if another Claude instance is already working
-there. If so, use `/parallel` to create a worktree and work without conflicts.
-
-### Worktree Context (CONTEXT.md)
-
-Each worktree has a `CONTEXT.md` file at its root for persistent context across sessions. This
-file is globally gitignored so it never gets committed.
-
-**When working in a worktree:**
-1. At the start of each session, `CONTEXT.md` is auto-loaded via the SessionStart hook. Use it
-   to pick up where you left off.
-2. **Update `CONTEXT.md` constantly** - after every commit, after completing a subtask, after
-   making a key decision, or after hitting a blocker. Treat it like a save file. If the session
-   ends unexpectedly (context limit, crash, user closes terminal), the next session should be
-   able to resume seamlessly from `CONTEXT.md` alone.
-3. Always include:
-   - What you were working on and the current status
-   - Key decisions made and their rationale
-   - Any blockers or next steps
-   - Files that were modified and why
-
-**Format:**
-```md
-# Context
-
-## Current Task
-Brief description of what this worktree is for.
-
-## Status
-What has been done and what remains.
-
-## Key Decisions
-- Decision 1 and why
-- Decision 2 and why
-
-## Next Steps
-- What to do next
-```
-
-Keep it concise. This is a working scratchpad, not documentation.
-
 ## Commits
 
 - Always break commits down into logical parts
@@ -362,31 +289,4 @@ saved.
 
 - Use `fd` instead of `find`
 - Use `rg` (ripgrep) instead of `grep`
-- Feel free to add new functions to `~/.zshrc` and new aliases to `~/.aliases` to improve
-  workflow efficiency
-
-## Custom Slash Commands
-
-Custom slash commands are stored as Markdown files in `~/.claude/commands/`. Each command is a
-`.md` file with YAML frontmatter containing `description:` followed by the command instructions.
-The filename (without `.md`) becomes the command name (e.g., `ship.md` creates `/ship`).
-
-### Available Commands
-
-This repository includes the following custom slash commands in the `commands/` directory:
-
-- `/all <change>` - Apply a change across all local Git repos in ~/git and commit
-- `/audit` - Scan recent work across all repos for guideline violations and suspicious changes
-- `/check` - Double-check current work against all guidelines in CLAUDE.md
-- `/commit` - Analyze uncommitted changes and break them into logical commits
-- `/merge-main` - Commit worktree changes and merge into the local main branch
-- `/parallel` - Create a worktree to work in parallel with another Claude instance
-- `/prompt <repo> <task>` - Generate a prompt for another Claude session and copy to clipboard
-- `/push` - Analyze changes, create logical commits, and push to remote
-- `/release [patch|minor|major]` - Full release workflow with version bump and changelog
-- `/remember <note>` - Add a note to CLAUDE.md memory
-- `/repo <name>` - Work in a specific repository, checking ~/git first
-- `/ship` - Push changes and release a patch version (shortcut for /push + /release patch)
-- `/todo <item>` - Add an item to the current repo's TODO.md
-- `/topic` - Generate a sentence-case topic name from the conversation and copy to clipboard
 
