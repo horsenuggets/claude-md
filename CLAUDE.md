@@ -49,6 +49,10 @@ Code must work on any machine, including CI environments. If you find yourself t
 - The first sentence of the description must exactly match the GitHub repository description
 - All GitHub repository descriptions should end with a period `.`
 - Additional details can follow the description (usage examples, etc.)
+- READMEs should be version-agnostic — never include exact version numbers in install
+  commands, dependency snippets, or usage examples. Use `@latest`, tool-managed install
+  commands (e.g., `rokit add`, `wally install`), or omit versions entirely. Version numbers
+  change frequently and stale examples are worse than no examples.
 
 ## Git Workflow
 
@@ -62,6 +66,12 @@ Always use SSH URLs (`git@github.com:`) in `.gitmodules` files, never HTTPS
 - **main**: Protected branch, requires PR with passing checks, squash merge only
 - **release**: Protected branch, requires PR with passing checks, squash merge only
 - **pre-release**: Used to resolve merge conflicts before PRing to release
+
+### CI Checks
+
+All CI checks must be required and blocking. Every workflow job that runs on PRs must be
+listed as a required status check in branch protection. No non-blocking or optional checks —
+if a check runs, it must pass before merging.
 
 ### Branch Naming
 
