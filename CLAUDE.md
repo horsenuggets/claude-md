@@ -159,6 +159,13 @@ After opening a PR, continuously poll its status until it is fully merged:
 8. If a PR is truly blocked by an external issue (e.g., upstream bug), explicitly tell the
    user and get confirmation before deferring it
 
+### PR Content
+
+When creating a PR, review the actual diff (`git diff main...HEAD`) and all commits on the
+branch — not just the latest commit. PRs often combine multiple commits, so the title and
+description must describe the aggregate of all changes. Double-check that the PR title and
+body accurately reflect what the diff contains.
+
 ## Commits
 
 - Always break commits down into logical parts
@@ -217,7 +224,9 @@ After opening a PR, continuously poll its status until it is fully merged:
 
 ## Changelog Format
 
-CHANGELOG.md should follow this format:
+CHANGELOG.md should follow this format. Never include a `0.0.0` entry — `0.0.0` is the
+initial development version and is never released, so the changelog should start empty and
+the first entry should be `0.0.1`.
 
 ```md
 # Changelog
@@ -228,9 +237,7 @@ CHANGELOG.md should follow this format:
 - Fixed a thing
 
 ## 0.0.1
-- Added a thing
-- Changed a thing
-- Fixed a thing
+- Initial release
 ```
 
 ## Ordering
