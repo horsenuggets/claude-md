@@ -52,6 +52,11 @@ Code must work on any machine, including CI environments. If you find yourself t
 
 ## Git Workflow
 
+### Submodule URLs
+
+Always use SSH URLs (`git@github.com:`) in `.gitmodules` files, never HTTPS
+(`https://github.com/`).
+
 ### Branch Strategy
 
 - **main**: Protected branch, requires PR with passing checks, squash merge only
@@ -185,6 +190,8 @@ body accurately reflect what the diff contains.
 
 ## Formatting
 
+- Always use `indent_style = space` in `.editorconfig` files — never use tabs for any
+  file type
 - Run `prettier --write "**/*.json"` to format all JSON files (respects `.editorconfig`)
 - Every file should end in a single newline
 - Text should be LF normalized
