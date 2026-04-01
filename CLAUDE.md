@@ -27,6 +27,13 @@ Tools and features must function correctly out of the box on any machine — if 
 manual settings or local file edits to work, it's not a real solution. Think about the team:
 every fix should be a permanent, portable software engineering solution, not a band-aid.
 
+## CRITICAL: Clean Up After Fixing Difficult Bugs
+
+When a difficult bug requires multiple exploratory attempts, always go back through all
+changes after the fix is working and remove anything redundant. Keep only the minimal set of
+changes needed for the fix. Verify after each removal that things still work. Exploratory
+scaffolding, abandoned approaches, and debug artifacts must not be left in the codebase.
+
 ## CRITICAL: No Environment Assumptions
 
 When working on a repository, never assume you can utilize context about the user's personal
