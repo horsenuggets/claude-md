@@ -19,6 +19,14 @@ not owned by the user unless given explicit permission. This includes forked ups
 third-party dependencies, and any repo not under the user's GitHub account. Always confirm
 before interacting with external repositories.
 
+## CRITICAL: Solve Problems at the Source
+
+Never apply per-machine workarounds, local config hacks, or quick fixes that only work on one
+computer. Always fix the root cause in the source code so it works automatically for everyone.
+Tools and features must function correctly out of the box on any machine — if it requires
+manual settings or local file edits to work, it's not a real solution. Think about the team:
+every fix should be a permanent, portable software engineering solution, not a band-aid.
+
 ## CRITICAL: No Environment Assumptions
 
 When working on a repository, never assume you can utilize context about the user's personal
