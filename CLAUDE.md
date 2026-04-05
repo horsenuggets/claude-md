@@ -113,7 +113,7 @@ the suffix. Use `chore/bump-version` instead of `chore/release-0.1.0`.
 
 1. Create a feature branch from main (e.g., `feature/my-feature`)
 2. Make changes and commit
-3. Create a PR to main
+3. Create a PR to main and request a review from GitHub Copilot
 4. PR must pass all checks (format, test, static analysis, branch naming)
 5. Squash merge to main
 6. Run the post-work cleanup checklist (see below)
@@ -276,6 +276,20 @@ the first entry should be `0.0.1`.
 
 - When things can be sorted alphabetically, definitely do that (e.g., imports, table keys, function parameters)
 - Constants should be placed above the module definition
+
+## State Management and Persistence
+
+Always consider what happens to in-memory state across process restarts, crashes, and
+session boundaries. If runtime state (caches, selections, active modes) needs to survive
+a restart, persist it to disk and load it back on startup. Think through edge cases:
+> What if the process restarts mid-operation?
+> What if the user switches modes and the old state is still saved?
+> What if the cache is stale or from a previous configuration?
+
+When adding a new stateful feature, always ask: "Does this break if the process restarts
+right now?" If yes, persist it. When clearing or changing state, clean up all related
+persisted data (not just the in-memory cache). Never leave orphaned state that causes
+confusing behavior after a restart.
 
 ## Tools
 
