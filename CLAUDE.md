@@ -234,6 +234,10 @@ body accurately reflect what the diff contains.
 - Group all constants together without blank lines between them
 - Always read through existing code to match style
 - Hex color codes should always use lowercase letters (e.g., `#cc7722`, not `#CC7722`)
+- Markdown code blocks must always use the full language name as the syntax hint for
+  proper highlighting. Use `typescript` (not `ts`), `javascript` (not `js`),
+  `bash` (not `sh`), `luau` (not `lua`), `python` (not `py`), etc. This applies
+  to README files, documentation, and any markdown content.
 
 ## Comments
 
