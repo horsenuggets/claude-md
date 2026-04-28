@@ -82,6 +82,17 @@ Always use SSH URLs (`git@github.com:`) in `.gitmodules` files, never HTTPS
 - **release**: Protected branch, requires PR with passing checks, squash merge only
 - **pre-release**: Used to resolve merge conflicts before PRing to release
 
+**Repository merge settings** (enforced via Terraform for all repos):
+- `allow_squash_merge = true`
+- `allow_merge_commit = false`
+- `allow_rebase_merge = false`
+- `squash_merge_commit_title = "PR_TITLE"`
+- `squash_merge_commit_message = "PR_BODY"`
+- `delete_branch_on_merge = true`
+
+This ensures squash merge is the only option. The PR title becomes the commit
+message, keeping branch history clean with one commit per PR.
+
 ### CI Checks
 
 All CI checks must be required and blocking. Every workflow job that runs on PRs must be
