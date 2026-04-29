@@ -58,6 +58,23 @@ Always use:
 
 Code must work on any machine, including CI environments. If you find yourself typing a username or a path from your local machine, stop immediately.
 
+## CRITICAL: No Default Values in Configuration
+
+NEVER hardcode default fallback values in configuration files (Docker compose, env vars,
+infrastructure configs, etc.). All values must come from environment variables or `.env`
+files — no `${VAR:-default}` patterns, no fallback constants, no "sensible defaults."
+
+If a required value is missing, the service must fail to start with a clear error message,
+not silently use a default. This applies to:
+
+- Docker compose `command:` and `environment:` sections
+- Port numbers, tokens, URLs, database paths
+- Any configuration that varies between environments
+
+The `.env` file (or GitHub Secrets in CI) is the single source of truth for all
+configuration. If a value isn't there, it's a deployment error that should be caught
+immediately — not papered over with a default that might be wrong.
+
 ## README Format
 
 - The title should be the exact repository name in lowercase kebab-case
