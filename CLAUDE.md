@@ -323,6 +323,41 @@ right now?" If yes, persist it. When clearing or changing state, clean up all re
 persisted data (not just the in-memory cache). Never leave orphaned state that causes
 confusing behavior after a restart.
 
+## Testing
+
+Always write unit tests for new behavior. There is no class of feature that's "too
+complex" or "too side-effectful" to test — authentication flows, disk reads/writes,
+HTTP requests, UI rendering, and concurrency are all testable when you separate
+decision logic from I/O.
+
+Approach:
+
+1. **Extract pure decision logic into a separate module.** If a component decides which
+   onboarding steps to show, or which auth method to use, or how to merge two configs,
+   that decision should live in a function that takes its inputs as arguments and
+   returns a value — no I/O, no globals, no `Date.now()`. Tests then exercise it
+   directly without touching the real subsystem.
+2. **Mock the boundaries, not the logic.** Stub the secure-storage layer, the network
+   client, the filesystem, the OAuth provider — whatever sits at the edge. Don't mock
+   the function under test or assert on internal call counts; assert on observable
+   outputs.
+3. **Use state machines to verify truthiness.** When the feature has multiple
+   conditions (e.g. "is theme picked AND is Discord authed?"), write a test that
+   walks every combination of those booleans and asserts the expected branch. Loop
+   over the 2^N truth table rather than picking a few cases — invariants ("X is
+   always true", "Y never duplicates") catch bugs that case-by-case tests miss.
+4. **Pin contracts that are easy to break.** If a function must be pure, write a test
+   that calls it twice with the same input and asserts both results are equal. If a
+   list must stay in a fixed order, assert the order. If an array shrinking would
+   break the caller, document that with a regression test.
+5. **For UI, test the data the UI consumes.** Don't try to assert on rendered pixels —
+   test the helper that produces the props/state the component renders from. The
+   React/Ink component itself becomes a thin shell over tested logic.
+
+If a feature is hard to test, that's a signal to refactor — usually by extracting the
+decision into a pure helper and pushing I/O to the edges. "Hard to test" is never an
+acceptable reason to skip tests.
+
 ## Tools
 
 - Use `fd` instead of `find`
