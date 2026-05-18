@@ -233,13 +233,18 @@ body accurately reflect what the diff contains.
 
 ## File and Folder Naming
 
-- Use PascalCase for all folder and file names in the repository, even for non-Luau files
-  like Terraform (.tf), configuration, and infrastructure code
-- This is a deliberate stylistic choice to maintain consistency across the entire project,
-  even when it diverges from community conventions for those tools
-- For example, `Terraform/Main.tf` instead of `terraform/main.tf`
-- Exceptions: files that must be lowercase for tooling compatibility (e.g., `.gitignore`,
-  `package.json`, `rokit.toml`, `wally.toml`, `.luaurc`, `Makefile`)
+- Match the dominant naming style already used in the repository. Consistency within a
+  repo is the priority — every folder and file should follow the same convention.
+- If the repo predominantly uses PascalCase (e.g., Luau projects with `Source/`,
+  `Scripts/`), use PascalCase for all folders and files, even for non-Luau files like
+  Terraform (.tf), configuration, and infrastructure code (e.g., `Terraform/Main.tf`).
+- If the repo predominantly uses kebab-case (e.g., web/CSS/TypeScript projects), use
+  kebab-case for all folders and files (e.g., `src/my-module.ts`).
+- Do not mix styles within a single repo. If you find inconsistency, standardize on the
+  dominant style rather than preserving the exception.
+- Exceptions: files that must be a specific case for tooling compatibility (e.g.,
+  `.gitignore`, `package.json`, `rokit.toml`, `wally.toml`, `.luaurc`, `Makefile`,
+  `README.md`, `LICENSE`, `CHANGELOG.md`, `VERSION`).
 
 ## Formatting
 
