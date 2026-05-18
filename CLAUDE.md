@@ -141,7 +141,8 @@ the suffix. Use `chore/bump-version` instead of `chore/release-0.1.0`.
 
 1. Create a feature branch from main (e.g., `feature/my-feature`)
 2. Make changes and commit
-3. Create a PR to main and request a review from GitHub Copilot
+3. Create a PR to main. If an AI reviewer (Greptile or similar) is configured on the repo, it
+   will auto-trigger. Otherwise, request review manually if applicable.
 4. PR must pass all checks (format, test, static analysis, branch naming)
 5. Squash merge to main
 6. Run the post-work cleanup checklist (see below)
@@ -208,10 +209,14 @@ After opening a PR, continuously poll its status until it is fully merged:
 
 1. Poll CI check results every 30-60 seconds until all checks complete
 2. If checks fail, read the CI logs, investigate the failure, fix the issue, and push updates
-3. Keep iterating — fix, push, poll, repeat — until all checks pass
-4. Wait for GitHub Copilot's review before merging (manually request a review from Copilot if
-   needed)
-5. Once all checks pass and Copilot has reviewed, merge immediately
+3. Keep iterating (fix, push, poll, repeat) until all checks pass
+4. Wait for the configured AI reviewer's review before merging. A passing status check from
+   an AI reviewer only means the reviewer finished running without error; it is NOT
+   equivalent to PR approval. If the repo uses Greptile, comment `@greptileai` to trigger a
+   fresh review when needed. Read every inline comment; for each, either fix the issue and
+   reply with the commit SHA, or reply with a clear technical reason for disagreement.
+   Resolve every thread before merging.
+5. Once all checks pass and every AI-reviewer thread is resolved, merge immediately
 6. After merging, verify the PR state is MERGED before moving on
 7. Do not end the conversation or move to the next task while a PR is still open
 8. If a PR is truly blocked by an external issue (e.g., upstream bug), explicitly tell the
